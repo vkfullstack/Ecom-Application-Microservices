@@ -1,9 +1,10 @@
 package com.app.ecom.Entity;
 
-import jakarta.persistence.Entity;
+import lombok.Data;
 
-@Entity
+@Data
 public class User {
     private Long id;
-    private String name;
+    private String firstName;
+    private String lastName;
 }
