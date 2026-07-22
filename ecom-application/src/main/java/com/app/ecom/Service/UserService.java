@@ -1,47 +1,96 @@
 package com.app.ecom.Service;
 
+import com.app.ecom.Entity.Adress;
 import com.app.ecom.Entity.User;
+import com.app.ecom.Repository.UserRepository;
+import com.app.ecom.dto.AdressDto;
+import com.app.ecom.dto.UserRequest;
+import com.app.ecom.dto.UserResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    private List<User> userList = new ArrayList<>();
-    private  long nextid=1l;
 
-    @GetMapping("/api/users")
-    public List<User> fetchAllUser() {
-        return userList;
+    private final UserRepository userRepository;
+
+    // Get all users
+    public List<UserResponse> fetchAllUser() {
+        return userRepository.findAll().stream()
+                .map(this::mapTOUserResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Save user
+    public void addUser(UserRequest userRequest) {
+        User user = new User();
+        updateUserFromRequest(user,userRequest);
+        userRepository.save(user);
     }
 
 
-    public void addUser(@RequestBody User user) {
-        user.setId(nextid++);
-        userList.add(user);
-
+    // Get user by ID
+    public Optional<UserResponse> fetchUser(long id) {
+        return userRepository.findById(id).map(this::mapTOUserResponse);
     }
 
-    public Optional<User> fetchUser(long id) {
-     return  userList.stream()
-             .filter(user -> user.getId() == id)
-             .findFirst();
-        }
+    // Update user
+    public boolean updatedUser(long id, UserRequest userRequestupdate ) {
 
-    public boolean updatedUser(long id, User userupdated) {
-        return  userList.stream()
-                .filter(user -> user.getId() == id)
-                .findFirst()
+        return userRepository.findById(id)
                 .map(user -> {
-                    user.setFirstName(userupdated.getFirstName());
-                    user.setLastName(userupdated.getLastName());
+                   updateUserFromRequest(user,userRequestupdate);
+
+                    userRepository.save(user);
+
                     return true;
                 })
                 .orElse(false);
     }
-}
+    private void updateUserFromRequest(User user, UserRequest userRequest) {
+        user.setFirstName(userRequest.getFirstName());
+        user.setLastName(userRequest.getLastName());
+        user.setEmail(userRequest.getEmail());
+        user.setPhone(userRequest.getPhone());
+    if(userRequest.getAdress()!=null){
+        Adress adress = new Adress();
+        adress.setStreet(userRequest.getAdress().getStreet());
+        adress.setCity(userRequest.getAdress().getCity());
+        adress.setState(userRequest.getAdress().getState());
+        adress.setCountry(userRequest.getAdress().getCountry());
+        adress.setZipcode(userRequest.getAdress().getZipcode());
+        user.setAdress(adress);
+    }
 
+
+    }
+
+
+
+
+    private UserResponse  mapTOUserResponse(User user){
+        UserResponse userResponse=new UserResponse();
+        userResponse.setId(String.valueOf(user.getId()));
+        userResponse.setFirstName(user.getFirstName());
+        userResponse.setLastName(user.getLastName());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setPhone(user.getPhone());
+        userResponse.setRole(user.getRole());
+        if(user.getAdress()!=null){
+            AdressDto adressDto = new AdressDto();
+            adressDto.setStreet(user.getAdress().getStreet());
+            adressDto.setCity(user.getAdress().getCity());
+            adressDto.setState(user.getAdress().getState());
+            adressDto.setCountry(user.getAdress().getCountry());
+            adressDto.setZipcode(user.getAdress().getZipcode());
+            userResponse.setAdress(adressDto);
+        }
+        return userResponse;
+
+    }
+}
