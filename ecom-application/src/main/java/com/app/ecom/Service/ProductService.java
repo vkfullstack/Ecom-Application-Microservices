@@ -7,6 +7,10 @@ import com.app.ecom.dto.ProductResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -32,6 +36,7 @@ public class ProductService {
 
     }
 
+
     private void UpdateProductFromRequest(Product product, ProductRequest productRequest) {
         product.setName(productRequest.getName());
         product.setDescription(productRequest.getDescription());
@@ -40,5 +45,35 @@ public class ProductService {
         product.setPrice(productRequest.getPrice());
         product.setStockquantity(productRequest.getStockquantity());
         }
+
+    public Optional<ProductResponse> updateProduct(long id, ProductRequest productRequest) {
+      return  productRepository.findById(id).map(extestingproduct->{
+             UpdateProductFromRequest(extestingproduct,productRequest);
+             Product updatedProduct=productRepository.save(extestingproduct);
+             return  mapToProductResponse(updatedProduct);
+         });
     }
+
+
+    public List<ProductResponse> getAllproduct() {
+        return productRepository.findByActiveTrue()
+                .stream()
+                .map(this::mapToProductResponse)
+                .collect(Collectors.toList());
+    }
+
+    public boolean deleteproduct(long id) {
+        return productRepository.findById(id).map(product -> {
+            product.setActive(false);
+            productRepository.save(product);
+            return true;
+        }).orElse(false);
+    }
+
+    public List<ProductResponse> searchProduct(String keyword) {
+        return productRepository.searchProducts(keyword).stream()
+                .map(this::mapToProductResponse)
+                .collect(Collectors.toList());
+    }
+}
 
