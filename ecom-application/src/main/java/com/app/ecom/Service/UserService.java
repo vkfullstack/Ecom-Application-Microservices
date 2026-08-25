@@ -69,10 +69,6 @@ public class UserService {
 
 
     }
-
-
-
-
     private UserResponse  mapTOUserResponse(User user){
         UserResponse userResponse=new UserResponse();
         userResponse.setId(String.valueOf(user.getId()));
