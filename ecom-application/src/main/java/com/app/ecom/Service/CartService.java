@@ -12,11 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CardService {
+public class CartService {
 
     private final ProductRepository productRepository;
     private final CartIteamRepository cartIteamRepository;
@@ -110,5 +111,16 @@ public class CardService {
             cartIteamRepository.deleteByUserAndProduct(user, product);
             return true;
         })).orElse(false);
+    }
+
+    public List<CartItem> getCartItems(String userId) {
+        return  userRepository.findById(Long.valueOf(userId))
+                .map(cartIteamRepository:: findAllByUser)
+                .orElse(List.of());
+    }
+@Transactional
+    public void clearCart(String userId) {
+        userRepository.findById(Long.valueOf(userId))
+                .ifPresent(cartIteamRepository::deleteAllByUser);
     }
 }
